@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [16, 18, 20]
+        node: [18, 20]
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.4
@@ -22,3 +22,6 @@ jobs:
           cache: 'yarn'
       - run: yarn
       - run: yarn run test
+
+      - name: Build docker image
+        run: docker build -t my-ci-api:latest .
