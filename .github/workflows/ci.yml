@@ -26,5 +26,15 @@ jobs:
           SHA=$(echo $GITHUB_SHA | head -c7)
           echo "::set-output name=sha::$SHA"
 
+      - name: Login into container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build docker image
-        run: docker build -t my-ci-api:${{ steps.generate_commit_tag.outputs.sha }} .
+        run: docker build -t marcosparreiras/my-ci-api:${{ steps.generate_commit_tag.outputs.sha }} .
+
+      - name: Push image
+        run: docker push marcosparreiras/my-ci-api:${{ steps.generate_commit_tag.outputs.sha }}
