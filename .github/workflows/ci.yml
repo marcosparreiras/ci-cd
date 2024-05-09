@@ -9,19 +9,22 @@ jobs:
   build:
     name: 'Build and Push'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [18, 20]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.4
-      - name: Setup Node.js environment | ${{matrix.node}}
+      - name: Setup Node.js environment
         uses: actions/setup-node@v4.0.2
         with:
-          node-version: ${{matrix.node}}
-          cache: 'yarn'
+          node-version: 20
       - run: yarn
       - run: yarn run test
 
+      - name: Generate commit tag
+        id: generate_commit_tag
+        run: |
+          SHA=$(echo $GITHUB_SHA | head -c7)
+          echo "sha=$SHA" >> GITHUB_OUTPUT
+
       - name: Build docker image
-        run: docker build -t my-ci-api:latest .
+        run: docker build -t my-ci-api:${{ steps.generate_commit_tag.outputs.sha }} .
