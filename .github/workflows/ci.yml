@@ -24,7 +24,7 @@ jobs:
         id: generate_commit_tag
         run: |
           SHA=$(echo $GITHUB_SHA | head -c7)
-          echo "sha=$SHA" >> GITHUB_OUTPUT
+          echo "::set-output name=sha::$SHA"
 
       - run: echo "${{steps.generate_commit_tag.outputs.sha}}"
 
