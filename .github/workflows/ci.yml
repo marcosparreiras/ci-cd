@@ -17,6 +17,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.4
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v4.0.2
         with:
@@ -33,7 +34,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{secrets.AWS_ROLE_TO_ASSUME}}
+          role-to-assume: ${{ secrets.ECR_ROLE }}
           aws-region: us-east-2
 
       - name: Login to AWS ECR
@@ -41,6 +42,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push docker image to Amazon ECR
+        id: build-docker-image
         env:
           REGISTRY: ${{steps.login-ecr.outputs.registry}}
           REPOSITORY: rocketseat_ci
@@ -48,6 +50,19 @@ jobs:
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          IMAGE=$(echo $$REGISTRY/$REPOSITORY:$IMAGE_TAG)
+          echo "::set-output name=image::$IMAGE"
+
+      - name: Deploy to App Runner
+        uses: awslabs/amazon-app-runner-deploy@main
+        with:
+          service: rocketseat_api
+          image: ${{ steps.build-docker-image.outputs.image }}
+          access-role-arn: ${{ secrets.APP_RUNNER_ROLE }}
+          region: us-east-2
+          cpu: 1
+          memory: 2
+          port: 3000
 
       # - name: Login into Docker Hub
       #   uses: docker/login-action@v3
